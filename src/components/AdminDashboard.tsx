@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   UserPlus, 
   Copy, 
@@ -12,7 +12,11 @@ import {
   Mail,
   User,
   Compass,
-  AlertCircle
+  AlertCircle,
+  Settings,
+  Upload,
+  Image as ImageIcon,
+  RotateCcw
 } from 'lucide-react';
 import { Director } from '../types';
 
@@ -22,6 +26,9 @@ interface AdminDashboardProps {
   onDeleteDirector: (email: string) => void;
   onLogout: () => void;
   onTriggerNotification: (message: string, type: 'success' | 'info' | 'error') => void;
+  appName: string;
+  appLogo: string;
+  onUpdateAppSettings: (name: string, logo: string) => void;
 }
 
 export default function AdminDashboard({
@@ -29,11 +36,113 @@ export default function AdminDashboard({
   onAddDirector,
   onDeleteDirector,
   onLogout,
-  onTriggerNotification
+  onTriggerNotification,
+  appName,
+  appLogo,
+  onUpdateAppSettings
 }: AdminDashboardProps) {
   const [newEmail, setNewEmail] = useState('');
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const [generatedLinkInfo, setGeneratedLinkInfo] = useState<{ email: string; link: string } | null>(null);
+
+  // Application Settings States
+  const [tempAppName, setTempAppName] = useState(appName);
+  const [tempLogo, setTempLogo] = useState(appLogo);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to process image file upload and compression
+  const processImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      onTriggerNotification("Veuillez sélectionner un fichier image valide (PNG, JPG, etc.).", "error");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 256; // Max width for local storage optimization
+        const MAX_HEIGHT = 256;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+          setTempLogo(compressedBase64);
+          onTriggerNotification("Nouveau logo chargé et optimisé avec succès !", "success");
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tempAppName.trim()) {
+      onTriggerNotification("Le nom de l'application ne peut pas être vide.", "error");
+      return;
+    }
+    onUpdateAppSettings(tempAppName.trim(), tempLogo);
+    onTriggerNotification("L'identité visuelle de l'application a été mise à jour !", "success");
+  };
+
+  const handleResetSettings = () => {
+    if (window.confirm("Voulez-vous réinitialiser le nom et le logo par défaut ?")) {
+      setTempAppName("Hinov Factures");
+      setTempLogo("/logo.jpeg");
+      onUpdateAppSettings("Hinov Factures", "/logo.jpeg");
+      onTriggerNotification("Identité de l'application réinitialisée !", "info");
+    }
+  };
 
   const handleCreateInvitation = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,11 +196,11 @@ export default function AdminDashboard({
       {/* Admin Navbar */}
       <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-30 px-6 py-4 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-md shadow-indigo-500/10">
-            <Compass className="w-6 h-6" />
+          <div className="w-10 h-10 bg-white border border-slate-100 dark:border-slate-800/40 rounded-xl flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+            <img src={appLogo} alt="Logo" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider leading-none">HINOV ADM_PORTAL</h1>
+            <h1 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-wider leading-none">{appName.split(' ')[0] || appName} ADM_PORTAL</h1>
             <p className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Console d'administration globale</p>
           </div>
         </div>
@@ -332,6 +441,102 @@ export default function AdminDashboard({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* NEW SECTION: Visual Identity Configuration */}
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800/40 space-y-6">
+          <div className="flex items-center gap-2">
+            <Settings className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h3 className="text-base font-black text-slate-900 dark:text-white">Identité Visuelle & Marque Blanche</h3>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Configurez le nom de l'application ainsi que l'icône de marque blanche qui s'affichera sur l'ensemble des écrans (Splash, Connexion, Menu latéral et Tableau de bord). Les modifications sont stockées localement de manière persistante.
+          </p>
+
+          <form onSubmit={handleSaveSettings} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+              {/* Left Form: App Name */}
+              <div className="md:col-span-6 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Nom personnalisé de l'application</label>
+                  <input 
+                    type="text" 
+                    required
+                    value={tempAppName}
+                    onChange={(e) => setTempAppName(e.target.value)}
+                    placeholder="ex: Hinov Factures"
+                    className="w-full h-11 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-xl px-4 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-950 p-4 border border-slate-200 dark:border-slate-850 rounded-2xl space-y-2">
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aperçu en direct</h4>
+                  <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-100 dark:border-slate-800/40 max-w-xs">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 dark:border-slate-800/40 overflow-hidden shrink-0 flex items-center justify-center">
+                      <img src={tempLogo} alt="Logo" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-sm font-black text-slate-800 dark:text-white truncate">{tempAppName}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Form: Logo Zone */}
+              <div className="md:col-span-6 space-y-3">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Nouveau Logo / Icône</label>
+                
+                <div className="flex items-center gap-4">
+                  {/* Current Preview */}
+                  <div className="w-20 h-20 bg-white border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shrink-0 shadow-inner flex items-center justify-center relative group">
+                    <img src={tempLogo} alt="Aperçu logo" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                  </div>
+
+                  {/* Drop zone container */}
+                  <div 
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={triggerFileInput}
+                    className={`flex-1 h-20 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-4 text-center cursor-pointer transition-all ${
+                      isDragging 
+                        ? 'border-indigo-500 bg-indigo-500/5 text-indigo-600' 
+                        : 'border-slate-200 dark:border-slate-800 hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800/30 text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <Upload className="w-5 h-5 mb-1 text-slate-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Glisser-déposer ou cliquer</span>
+                    <span className="text-[8px] text-slate-400 dark:text-slate-500 mt-0.5">JPEG ou PNG (redimensionné en 256x256)</span>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      onChange={handleLogoUpload}
+                      accept="image/*"
+                      className="hidden" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Save Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button 
+                type="button"
+                onClick={handleResetSettings}
+                className="h-10 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-600 dark:text-slate-300 rounded-xl flex items-center gap-2 font-bold text-xs transition-all active:scale-95 cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Réinitialiser</span>
+              </button>
+              
+              <button 
+                type="submit"
+                className="h-10 px-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl flex items-center gap-2 shadow-md shadow-indigo-500/10 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <Check className="w-4 h-4" />
+                <span>Enregistrer les modifications</span>
+              </button>
+            </div>
+          </form>
         </div>
 
         {/* Audit Logs Trail: Bottom */}

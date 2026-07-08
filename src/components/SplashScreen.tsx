@@ -4,9 +4,15 @@ import { Receipt } from 'lucide-react';
 
 interface SplashScreenProps {
   onComplete: () => void;
+  appName?: string;
+  appLogo?: string;
 }
 
-export default function SplashScreen({ onComplete }: SplashScreenProps) {
+export default function SplashScreen({ 
+  onComplete,
+  appName = 'Hinov Factures',
+  appLogo = '/logo.jpeg'
+}: SplashScreenProps) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -32,9 +38,9 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1, ease: 'easeOut' }}
-          className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/20 mb-6"
+          className="w-20 h-20 bg-white border border-slate-800 rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden mb-6 shrink-0"
         >
-          <Receipt className="w-10 h-10 text-white" />
+          <img src={appLogo} alt="Logo" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
         </motion.div>
 
         {/* Animated Brand Name */}
@@ -42,9 +48,9 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.8 }}
-          className="text-4xl font-extrabold tracking-tight text-white mb-2"
+          className="text-3xl font-extrabold tracking-tight text-white mb-2"
         >
-          Hinov <span className="text-blue-500">Factures</span>
+          {appName}
         </motion.h1>
 
         <motion.p

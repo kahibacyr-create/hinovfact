@@ -9,7 +9,6 @@ import {
   Settings, 
   LogOut, 
   Plus,
-  Compass,
   Sparkles,
   Menu,
   X
@@ -28,6 +27,8 @@ interface SidebarProps {
     avatarUrl?: string;
     role?: string;
   };
+  appName?: string;
+  appLogo?: string;
 }
 
 export default function Sidebar({ 
@@ -36,7 +37,9 @@ export default function Sidebar({
   onCreateInvoice, 
   onLogout,
   unreadNotificationsCount,
-  user
+  user,
+  appName = 'Hinov Factures',
+  appLogo = '/logo.jpeg'
 }: SidebarProps) {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   
@@ -55,11 +58,11 @@ export default function Sidebar({
       <aside className="fixed left-0 top-0 h-full max-h-screen overflow-y-auto border-r border-slate-200 dark:border-slate-800 bg-[#f1f4fa]/60 dark:bg-slate-900/40 flex flex-col p-6 w-72 z-40 hidden md:flex scrollbar-thin">
         {/* Header Branding */}
         <div className="mb-6 px-2 flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#00488d] rounded-xl flex items-center justify-center text-white">
-            <Compass className="w-6 h-6 animate-pulse" />
+          <div className="w-10 h-10 bg-white border border-slate-100 dark:border-slate-800/40 rounded-xl flex items-center justify-center overflow-hidden shadow-sm shrink-0">
+            <img src={appLogo} alt="Logo" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-[#00488d] dark:text-blue-400 leading-none">Hinov</h1>
+            <h1 className="text-xl font-extrabold text-[#00488d] dark:text-blue-400 leading-none">{appName.split(' ')[0] || appName}</h1>
             <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Gestion Financière</p>
           </div>
         </div>
@@ -320,7 +323,7 @@ export default function Sidebar({
               className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl text-xs font-bold text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 transition-all border border-rose-500/20"
             >
               <LogOut className="w-4 h-4" />
-              <span>Déconnecter Hinov</span>
+              <span>Déconnecter {appName.split(' ')[0] || appName}</span>
             </button>
           </div>
         </>

@@ -134,6 +134,21 @@ export default function App() {
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Global App settings states (Dynamic App Name & Logo)
+  const [appName, setAppName] = useState(() => {
+    return localStorage.getItem('hinov_app_name') || 'Hinov Factures';
+  });
+  const [appLogo, setAppLogo] = useState(() => {
+    return localStorage.getItem('hinov_app_logo') || '/logo.jpeg';
+  });
+
+  const handleUpdateAppSettings = (newName: string, newLogo: string) => {
+    setAppName(newName);
+    setAppLogo(newLogo);
+    localStorage.setItem('hinov_app_name', newName);
+    localStorage.setItem('hinov_app_logo', newLogo);
+  };
+
   // Global Search Transfer State
   const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
 
@@ -675,12 +690,12 @@ export default function App() {
 
   // Render Splash Entrance
   if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+    return <SplashScreen onComplete={() => setShowSplash(false)} appName={appName} appLogo={appLogo} />;
   }
 
   // Render Secured Login Portal
   if (!isAuthenticated) {
-    return <LoginScreen onLogin={handleLogin} />;
+    return <LoginScreen onLogin={handleLogin} appName={appName} appLogo={appLogo} />;
   }
 
   // Render Admin Dashboard
@@ -692,6 +707,9 @@ export default function App() {
         onDeleteDirector={handleDeleteDirector}
         onLogout={handleLogout}
         onTriggerNotification={triggerToast}
+        appName={appName}
+        appLogo={appLogo}
+        onUpdateAppSettings={handleUpdateAppSettings}
       />
     );
   }
@@ -718,6 +736,8 @@ export default function App() {
         onLogout={handleLogout}
         unreadNotificationsCount={overdueCount}
         user={user}
+        appName={appName}
+        appLogo={appLogo}
       />
 
       {/* 2. Main Work Content */}
@@ -726,7 +746,7 @@ export default function App() {
         <header className="md:hidden glass-header dark:glass-header-dark border-b border-slate-200 dark:border-slate-800/80 sticky top-0 z-30 h-14 px-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Receipt className="w-5 h-5 text-[#00488d] dark:text-blue-400" />
-            <h1 className="text-base font-black text-slate-800 dark:text-white uppercase tracking-wider">Hinov Factures</h1>
+            <h1 className="text-base font-black text-slate-800 dark:text-white uppercase tracking-wider">{appName}</h1>
           </div>
           <button 
             onClick={handleLogout}
