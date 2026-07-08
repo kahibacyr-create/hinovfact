@@ -1,0 +1,6 @@
+{
+  "name": "Hinov Factures",
+  "description": "Application de pilotage financier et de suivi des factures, paiements, marges et performances commerciaux pour Hinov.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
