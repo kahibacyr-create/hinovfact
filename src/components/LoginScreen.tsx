@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ShieldAlert, Key, User, ArrowRight, Download, Smartphone, Monitor, X, Info } from 'lucide-react';
+import { motion } from 'motion/react';
+import { ShieldAlert, Key, User, ArrowRight, Download } from 'lucide-react';
 
 interface LoginScreenProps {
   onLogin: (user: { 
@@ -19,15 +19,14 @@ export default function LoginScreen({
   appName = 'Hinov Factures',
   appLogo = '/logo.jpeg'
 }: LoginScreenProps) {
-  const [email, setEmail] = useState('jm.hinov@hinov-factures.com');
-  const [password, setPassword] = useState('director2026');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   // PWA states
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
-  const [showPwaGuide, setShowPwaGuide] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -52,6 +51,7 @@ export default function LoginScreen({
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
+      setError('');
       // Show the install prompt
       deferredPrompt.prompt();
       // Wait for the user to respond to the prompt
@@ -62,8 +62,8 @@ export default function LoginScreen({
       }
       setDeferredPrompt(null);
     } else {
-      // Fallback: show the guide for cross-platform/sandbox installation
-      setShowPwaGuide(true);
+      // Fallback message when clicked in iframe or unsupported browser/platform
+      setError("Le navigateur ne détecte pas de demande d'installation automatique. Si l'application est déjà installée, ouvrez-la directement. Sinon, ouvrez ce site hors d'un cadre (iframe) ou utilisez l'option d'installation de votre navigateur (Chrome, Edge, Safari...).");
     }
   };
 
@@ -183,7 +183,7 @@ export default function LoginScreen({
                   setEmail(e.target.value);
                   setError('');
                 }}
-                placeholder="directeur@hinov-factures.com"
+                placeholder="votre@email.com"
                 className="w-full h-12 bg-slate-50/70 border border-slate-200 focus:border-[#00488d] focus:bg-white rounded-xl pl-11 pr-4 text-slate-900 text-sm placeholder-slate-400 focus:ring-1 focus:ring-[#00488d] transition-all outline-none"
               />
             </div>
@@ -241,87 +241,9 @@ export default function LoginScreen({
           <span className="text-slate-400 text-xs">
             Accès crypté et sécurisé.
           </span>
-          <div className="mt-3 bg-blue-50/50 p-4 rounded-2xl border border-blue-100 text-left space-y-2">
-            <p className="text-[11px] font-bold text-[#00488d] uppercase tracking-wider flex items-center gap-1.5">
-              <span className="inline-block w-1.5 h-1.5 bg-blue-600 rounded-full animate-ping" />
-              🔑 Comptes de Démonstration :
-            </p>
-            <div className="text-[11px] text-slate-600 space-y-0.5">
-              <p><span className="font-semibold text-slate-800">Administrateur :</span> admin@hinov-factures.com</p>
-              <p><span className="font-semibold text-slate-800">Mot de passe :</span> admin2026</p>
-            </div>
-            <div className="text-[11px] text-slate-600 border-t border-slate-100 pt-1.5 space-y-0.5">
-              <p><span className="font-semibold text-slate-800">Directeur Général :</span> jm.hinov@hinov-factures.com</p>
-              <p><span className="font-semibold text-slate-800">Mot de passe :</span> director2026</p>
-            </div>
-          </div>
         </div>
       </motion.div>
 
-      {/* PWA Instruction modal/dialog */}
-      <AnimatePresence>
-        {showPwaGuide && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 z-50">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white border border-slate-100 rounded-3xl p-6 max-w-sm w-full space-y-6 shadow-2xl relative"
-            >
-              <button
-                onClick={() => setShowPwaGuide(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full cursor-pointer transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="text-center space-y-2">
-                <div className="inline-flex w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl items-center justify-center">
-                  <Smartphone className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900">Installer l'application</h3>
-                <p className="text-xs text-slate-500">Pour une expérience optimale sur grand écran ou mobile comme une application native :</p>
-              </div>
-
-              <div className="space-y-4 text-xs">
-                {/* Safari iOS */}
-                <div className="flex items-start gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                  <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg shrink-0 mt-0.5">
-                    <Smartphone className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900">iOS & iPadOS (Safari)</h4>
-                    <p className="text-slate-500 mt-1">Appuyez sur le bouton <strong>Partager</strong> <span className="text-blue-600 font-bold">⎋</span> puis choisissez <strong>Sur l'écran d'accueil</strong>.</p>
-                  </div>
-                </div>
-
-                {/* Google Chrome Desktop / Mobile */}
-                <div className="flex items-start gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                  <div className="p-1.5 bg-amber-100 text-amber-700 rounded-lg shrink-0 mt-0.5">
-                    <Monitor className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900">Chrome, Edge ou Firefox</h4>
-                    <p className="text-slate-500 mt-1">Cliquez sur l'icône d'installation dans la barre d'adresse, ou ouvrez le menu puis sélectionnez <strong>Installer l'application</strong>.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-[10px] text-slate-500 bg-blue-50/50 p-3.5 border border-blue-100/40 rounded-xl">
-                <Info className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>La PWA fonctionne hors-ligne et démarre instantanément en plein écran.</span>
-              </div>
-
-              <button
-                onClick={() => setShowPwaGuide(false)}
-                className="w-full h-11 bg-[#00488d] hover:bg-[#003c75] text-white font-bold text-xs rounded-xl cursor-pointer"
-              >
-                Compris
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
